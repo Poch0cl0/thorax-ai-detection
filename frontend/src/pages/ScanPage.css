@@ -1,0 +1,537 @@
+/* ========================================================================
+   ScanPage — Estilos para la página de análisis de radiografía
+   ======================================================================== */
+
+/* --- Header de página --- */
+.scan-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.scan-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+  background: linear-gradient(135deg, #58a6ff 0%, #a371f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.scan-header .subtitle {
+  color: #8b949e;
+  font-size: 0.95rem;
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* --- Layout principal (2 columnas) --- */
+.scan-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .scan-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Cards base (glassmorphism) --- */
+.scan-card {
+  background: rgba(22, 27, 34, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: border-color 0.3s ease;
+}
+
+.scan-card:hover {
+  border-color: #484f58;
+}
+
+.scan-card h2 {
+  font-size: 1.05rem;
+  margin: 0 0 1rem;
+  color: #e6edf3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scan-card h2 .icon {
+  font-size: 1.2rem;
+}
+
+/* --- Zona de upload --- */
+.upload-zone {
+  position: relative;
+  border: 2px dashed #30363d;
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(13, 17, 23, 0.6);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.05);
+}
+
+.upload-zone.has-file {
+  border-color: #238636;
+  border-style: solid;
+  background: rgba(35, 134, 54, 0.05);
+}
+
+.upload-zone input[type='file'] {
+  display: none;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  opacity: 0.6;
+}
+
+.upload-text {
+  color: #8b949e;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.upload-text strong {
+  color: #58a6ff;
+}
+
+.upload-formats {
+  color: #6e7681;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+/* --- Preview de imagen --- */
+.image-preview {
+  margin-top: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: #0d1117;
+  border: 1px solid #21262d;
+}
+
+.image-preview img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+}
+
+.image-preview .file-info {
+  padding: 0.5rem 0.75rem;
+  background: rgba(13, 17, 23, 0.9);
+  font-size: 0.8rem;
+  color: #8b949e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.image-preview .btn-remove {
+  background: none;
+  border: none;
+  color: #f85149;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.image-preview .btn-remove:hover {
+  background: rgba(248, 81, 73, 0.15);
+}
+
+/* --- Selector de modelo --- */
+.model-selector {
+  margin-top: 1.25rem;
+}
+
+.model-selector label {
+  display: block;
+  font-size: 0.85rem;
+  color: #8b949e;
+  margin-bottom: 0.5rem;
+}
+
+.model-options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .model-options {
+    flex-direction: column;
+  }
+}
+
+.model-option {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #0d1117;
+  text-align: left;
+}
+
+.model-option:hover {
+  border-color: #484f58;
+  background: #161b22;
+}
+
+.model-option.selected {
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.08);
+  box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3);
+}
+
+.model-option .model-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e6edf3;
+  display: block;
+}
+
+.model-option .model-desc {
+  font-size: 0.8rem;
+  color: #8b949e;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* --- Botón de análisis --- */
+.btn-analyze {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.85rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+  color: #fff;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-analyze:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(46, 160, 67, 0.35);
+}
+
+.btn-analyze:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-analyze:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #21262d;
+}
+
+.btn-analyze.loading {
+  background: linear-gradient(135deg, #1a6b2b 0%, #238636 100%);
+}
+
+/* --- Spinner --- */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Panel de resultados --- */
+.results-panel {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Predicción principal --- */
+.prediction-main {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.prediction-main.cancer {
+  background: linear-gradient(135deg, rgba(248, 81, 73, 0.12) 0%, rgba(218, 54, 51, 0.08) 100%);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.prediction-main.normal {
+  background: linear-gradient(135deg, rgba(46, 160, 67, 0.12) 0%, rgba(35, 134, 54, 0.08) 100%);
+  border: 1px solid rgba(46, 160, 67, 0.3);
+}
+
+.prediction-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.prediction-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.prediction-main.cancer .prediction-label {
+  color: #f85149;
+}
+
+.prediction-main.normal .prediction-label {
+  color: #2ea043;
+}
+
+.prediction-confidence {
+  font-size: 0.9rem;
+  color: #8b949e;
+}
+
+/* --- Barra de probabilidad --- */
+.probability-section {
+  margin-bottom: 1.25rem;
+}
+
+.probability-section h3 {
+  font-size: 0.9rem;
+  color: #8b949e;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.prob-bar-container {
+  margin-bottom: 0.85rem;
+}
+
+.prob-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.prob-bar-label .label-text {
+  color: #c9d1d9;
+}
+
+.prob-bar-label .label-value {
+  font-weight: 700;
+  font-family: 'Segoe UI', monospace;
+}
+
+.prob-bar-label .label-value.cancer {
+  color: #f85149;
+}
+
+.prob-bar-label .label-value.normal {
+  color: #2ea043;
+}
+
+.prob-bar-track {
+  height: 10px;
+  border-radius: 5px;
+  background: #21262d;
+  overflow: hidden;
+}
+
+.prob-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.prob-bar-fill.cancer {
+  background: linear-gradient(90deg, #da3633, #f85149);
+}
+
+.prob-bar-fill.normal {
+  background: linear-gradient(90deg, #238636, #2ea043);
+}
+
+/* --- Detalles del modelo --- */
+.model-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.detail-chip {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+}
+
+.detail-chip .chip-label {
+  font-size: 0.75rem;
+  color: #6e7681;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.detail-chip .chip-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+/* --- Riesgo --- */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.risk-badge.alto {
+  background: rgba(248, 81, 73, 0.15);
+  color: #f85149;
+  border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.risk-badge.moderado {
+  background: rgba(210, 153, 34, 0.15);
+  color: #d29922;
+  border: 1px solid rgba(210, 153, 34, 0.3);
+}
+
+.risk-badge.bajo {
+  background: rgba(46, 160, 67, 0.15);
+  color: #2ea043;
+  border: 1px solid rgba(46, 160, 67, 0.3);
+}
+
+/* --- Recomendación --- */
+.recommendation-box {
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.recommendation-box h3 {
+  font-size: 0.85rem;
+  color: #c9d1d9;
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.recommendation-box p {
+  font-size: 0.9rem;
+  color: #8b949e;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* --- Disclaimer --- */
+.disclaimer-box {
+  background: rgba(210, 153, 34, 0.06);
+  border: 1px solid rgba(210, 153, 34, 0.2);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-top: 1.5rem;
+}
+
+.disclaimer-box p {
+  font-size: 0.8rem;
+  color: #d29922;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- Error --- */
+.scan-error {
+  background: rgba(248, 81, 73, 0.08);
+  border: 1px solid rgba(248, 81, 73, 0.25);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  color: #f85149;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* --- Placeholder columna derecha --- */
+.results-placeholder {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: #6e7681;
+}
+
+.results-placeholder .placeholder-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+  display: block;
+}
+
+.results-placeholder p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* --- Animación de número --- */
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-number {
+  animation: countUp 0.5s ease-out;
+}

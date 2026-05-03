@@ -5,11 +5,17 @@ export function DashboardPage() {
     <div className="page-card">
       <h1>Panel principal</h1>
       <p className="lead">
-        Flujo sugerido: registrar un paciente, crear un estudio asociado y
-        ejecutar una predicción de apoyo (modelo simulado hasta montar el
-        artefacto real).
+        Sistema de detección de cáncer de tórax con IA. Sube una
+        radiografía para obtener un análisis inmediato, o gestiona
+        pacientes y estudios con el flujo clínico completo.
       </p>
       <ul className="link-grid">
+        <li>
+          <Link to="/scan">🔬 Análisis IA</Link>
+          <span className="muted">
+            Subir radiografía y obtener predicción inmediata
+          </span>
+        </li>
         <li>
           <Link to="/patients">Pacientes</Link>
           <span className="muted">Alta y listado</span>
@@ -19,8 +25,8 @@ export function DashboardPage() {
           <span className="muted">Por paciente</span>
         </li>
         <li>
-          <Link to="/predict">Predicción IA</Link>
-          <span className="muted">Inferencia sobre estudio</span>
+          <Link to="/predict">Predicción clínica</Link>
+          <span className="muted">Inferencia sobre estudio registrado</span>
         </li>
       </ul>
     </div>

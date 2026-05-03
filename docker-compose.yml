@@ -24,12 +24,19 @@ services:
       SECRET_KEY: ${SECRET_KEY:-change-me-use-env-secret-key}
       CORS_ORIGINS: http://localhost,http://localhost:80,http://127.0.0.1
       MODEL_PATH: ${MODEL_PATH:-}
-      MODEL_VERSION: ${MODEL_VERSION:-stub-0.1.0}
+      MODEL_VERSION: ${MODEL_VERSION:-spark-ml-1.0.0}
+      LR_MODEL_PATH: /app/models/modelo_lr_empaquetado
+      RF_MODEL_PATH: /app/models/modelo_rf_empaquetado
+      MODELS_DIR: /app/models
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
     command: >
       sh -c "alembic upgrade head &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000"
