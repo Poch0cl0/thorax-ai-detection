@@ -42,9 +42,9 @@ export function StudiesPage() {
   }
 
   return (
-    <div className="page-card">
-      <h1>Estudios</h1>
-      <p className="muted">
+    <div className="page-card mx-auto max-w-4xl border-thorax-border bg-thorax-card">
+      <h1 className="text-2xl font-bold text-thorax-text">Estudios</h1>
+      <p className="mt-2 text-sm text-thorax-muted">
         Seleccione un paciente para ver estudios o crear uno nuevo (metadatos;
         imágenes reales vía PACS/almacén según despliegue).
       </p>

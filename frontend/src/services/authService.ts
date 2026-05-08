@@ -34,5 +34,12 @@ export function logout() {
 }
 
 export async function fetchCurrentUser(): Promise<User> {
-  return apiFetch<User>('/api/v1/users/me')
+  const data = await apiFetch<User>('/api/v1/users/me')
+  const roles =
+    Array.isArray(data.roles) && data.roles.length > 0
+      ? [...data.roles]
+      : data.role
+        ? [data.role]
+        : ['clinician']
+  return { ...data, roles }
 }

@@ -16,6 +16,15 @@ class UserRead(BaseModel):
     full_name: str | None
     is_active: bool
     role: str
+    roles: list[str] = Field(default_factory=list)
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class UserBriefRead(BaseModel):
+    id: int
+    email: EmailStr
+    full_name: str | None
+    roles: list[str] = Field(default_factory=list)
+

@@ -22,3 +22,6 @@ class Patient(Base):
     )
 
     studies: Mapped[list["Study"]] = relationship("Study", back_populates="patient")
+    appointments: Mapped[list["Appointment"]] = relationship(
+        "Appointment", back_populates="patient"
+    )

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -11,6 +12,20 @@ from app.models import Prediction, Study
 from app.schemas.prediction import PredictionCreate
 
 logger = logging.getLogger(__name__)
+
+
+def load_study_image_bytes(study: Study) -> bytes | None:
+    key = study.image_storage_key
+    if not key or not key.strip():
+        return None
+    candidate = Path(key)
+    abs_path = candidate if candidate.is_file() else (Path(settings.UPLOAD_ROOT) / key)
+    try:
+        if abs_path.is_file():
+            return abs_path.read_bytes()
+    except OSError:
+        logger.warning("No se pudo leer imagen del estudio %s desde %s", study.id, abs_path)
+    return None
 
 
 class PredictionService:
@@ -32,11 +47,12 @@ class PredictionService:
             "patient_id": study.patient_id,
         }
 
+        pixel_bytes = load_study_image_bytes(study)
         timeout = settings.INFERENCE_TIMEOUT_SECONDS
 
         try:
             raw = await asyncio.wait_for(
-                asyncio.to_thread(run_inference, meta, None),
+                asyncio.to_thread(run_inference, meta, pixel_bytes),
                 timeout=timeout,
             )
         except asyncio.TimeoutError as exc:
@@ -75,9 +91,6 @@ class PredictionService:
         )
         db.commit()
         db.refresh(prediction)
-
-        # Actualizar audit con entity_id del prediction id
-        # (opcional; omitimos segunda query por simplicidad)
 
         return prediction
 

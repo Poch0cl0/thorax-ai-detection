@@ -15,8 +15,8 @@ export function LoginPage() {
 
   if (loading) {
     return (
-      <div className="login-wrap">
-        <p className="muted">Cargando…</p>
+      <div className="flex min-h-screen items-center justify-center bg-thorax-bg-deep text-thorax-muted">
+        <p>Cargando…</p>
       </div>
     )
   }
@@ -25,12 +25,19 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-wrap">
-      <div className="page-card narrow">
-        <h1>Ingreso clínico</h1>
-        <p className="muted">
-          Sistema de apoyo para detección temprana (demostración).
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-thorax-bg-deep via-thorax-bg to-slate-950 px-4 py-10">
+      <div className="w-full max-w-md rounded-2xl border border-thorax-border bg-thorax-card-alt px-8 py-10 shadow-2xl shadow-cyan-950/20">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-sky-600 text-lg font-bold text-slate-900 shadow-lg">
+            TX
+          </div>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-thorax-text">
+            ThoraxAI
+          </h1>
+          <p className="mt-2 max-w-xs text-sm leading-relaxed text-thorax-muted">
+            Sistema de Inteligencia Artificial para Diagnóstico Torácico
+          </p>
+        </div>
         <LoginForm
           error={error}
           loading={busy}

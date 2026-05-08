@@ -28,3 +28,13 @@ class User(Base):
     audit_logs: Mapped[list["AuditLog"]] = relationship(
         "AuditLog", back_populates="user"
     )
+    role_assignments: Mapped[list["UserRole"]] = relationship(
+        "UserRole",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    appointments_attending: Mapped[list["Appointment"]] = relationship(
+        "Appointment",
+        foreign_keys="Appointment.attending_user_id",
+        back_populates="attending_user",
+    )

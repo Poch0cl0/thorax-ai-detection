@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.security import create_access_token
 from app.schemas.auth import Token
+from app.services.role_service import RoleService
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,5 +25,10 @@ def login_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas",
         )
-    token = create_access_token(str(user.id), extra={"email": user.email})
+    roles = RoleService.roles_for_user(db, user.id)
+    if not roles:
+        roles = [user.role]
+    token = create_access_token(
+        str(user.id), extra={"email": user.email, "roles": roles}
+    )
     return Token(access_token=token)

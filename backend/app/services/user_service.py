@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash, verify_password
 from app.models import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserRead
+from app.services.role_service import RoleService
 
 
 class UserService:
@@ -23,9 +24,26 @@ class UserService:
             role=data.role,
         )
         db.add(user)
+        db.flush()
+        RoleService.sync_from_primary_role_uncommitted(db, user.id, data.role)
         db.commit()
         db.refresh(user)
         return user
+
+    @staticmethod
+    def to_read(db: Session, user: User) -> UserRead:
+        roles = RoleService.roles_for_user(db, user.id)
+        if not roles:
+            roles = [user.role]
+        return UserRead(
+            id=user.id,
+            email=user.email,  # type: ignore[arg-type]
+            full_name=user.full_name,
+            is_active=user.is_active,
+            role=user.role,
+            roles=roles,
+            created_at=user.created_at,
+        )
 
     @staticmethod
     def authenticate(db: Session, email: str, password: str) -> User | None:

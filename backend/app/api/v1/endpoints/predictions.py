@@ -3,19 +3,24 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_roles
 from app.models import User
 from app.schemas.prediction import PredictionCreate, PredictionRead
 from app.services.prediction_service import PredictionService
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
 
+DoctorOrAdmin = Annotated[
+    User,
+    Depends(require_roles("clinician", "admin")),
+]
+
 
 @router.post("", response_model=PredictionRead, status_code=status.HTTP_201_CREATED)
 async def create_prediction(
     data: PredictionCreate,
     db: Annotated[Session, Depends(get_db)],
-    current: Annotated[User, Depends(get_current_user)],
+    current: DoctorOrAdmin,
 ) -> object:
     try:
         return await PredictionService.run_and_store(

@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,6 +22,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    UPLOAD_ROOT: str = str(Path("uploads"))
 
     MODEL_PATH: str | None = None
     MODEL_VERSION: str = "stub-0.1.0"

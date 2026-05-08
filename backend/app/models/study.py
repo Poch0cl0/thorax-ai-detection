@@ -13,6 +13,11 @@ class Study(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), index=True)
+    appointment_id: Mapped[int | None] = mapped_column(
+        ForeignKey("appointments.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     study_instance_uid: Mapped[str | None] = mapped_column(String(128), index=True)
     modality: Mapped[str] = mapped_column(String(32), default="CT")
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -25,6 +30,9 @@ class Study(Base):
     )
 
     patient: Mapped["Patient"] = relationship("Patient", back_populates="studies")
+    appointment: Mapped["Appointment | None"] = relationship(
+        "Appointment", back_populates="studies"
+    )
     predictions: Mapped[list["Prediction"]] = relationship(
         "Prediction", back_populates="study"
     )

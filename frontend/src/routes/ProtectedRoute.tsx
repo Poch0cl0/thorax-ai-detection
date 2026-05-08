@@ -7,8 +7,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="page-card">
-        <p className="muted">Cargando sesión…</p>
+      <div className="flex min-h-screen items-center justify-center bg-thorax-bg-deep text-thorax-muted">
+        <p>Cargando sesión…</p>
       </div>
     )
   }

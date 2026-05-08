@@ -1,0 +1,221 @@
+{
+  "demo_users": {
+    "demo@hospital.com": {
+      "app_role": "especialista",
+      "full_name": "Dr. Carlos Mendez"
+    },
+    "secretaria@hospital.com": {
+      "app_role": "secretaria",
+      "full_name": "Ana Torres"
+    }
+  },
+  "patients": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "full_name": "Juan Manuel Rodriguez García",
+      "dni": "45821936",
+      "birth_date": "1962-03-15",
+      "gender": "M",
+      "phone": "+51999888777",
+      "email": "juan.rodriguez@email.com",
+      "conditions_summary": "Hipertensión, Diabetes Tipo 2"
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "full_name": "María Elena Vásquez López",
+      "dni": "43125678",
+      "birth_date": "1978-08-22",
+      "gender": "F",
+      "phone": "+51987654321",
+      "email": "maria.vasquez@email.com",
+      "conditions_summary": "Asma bronquial"
+    },
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "full_name": "Roberto Santos Quispe",
+      "dni": "40111222",
+      "birth_date": "1955-11-05",
+      "gender": "M",
+      "phone": "+51911122333",
+      "email": "roberto.santos@email.com",
+      "conditions_summary": "EPOC, tabaquismo"
+    },
+    {
+      "id": "d4e5f6a7-b8c9-0123-def0-456789012345",
+      "full_name": "Carmen Huamán Reyes",
+      "dni": "47654321",
+      "birth_date": "1990-01-30",
+      "gender": "F",
+      "phone": "+51944455666",
+      "email": "carmen.huaman@email.com",
+      "conditions_summary": null
+    },
+    {
+      "id": "e5f6a7b8-c9d0-1234-ef01-567890123456",
+      "full_name": "Luis Alberto Paredes",
+      "dni": "48901234",
+      "birth_date": "1970-06-18",
+      "gender": "M",
+      "phone": "+51933322111",
+      "email": "luis.paredes@email.com",
+      "conditions_summary": "Obesidad grado I"
+    }
+  ],
+  "specialists": [
+    {
+      "id": "f601a002-0001-4000-8000-000000000001",
+      "user_id": "f601a002-1001-4000-8000-000000000001",
+      "cmp": "CMP-45231",
+      "specialty": "Neumología",
+      "display_name": "Dr. Carlos Mendez",
+      "email_hint": "demo@hospital.com"
+    },
+    {
+      "id": "f601a002-0002-4000-8000-000000000002",
+      "user_id": "f601a002-1002-4000-8000-000000000002",
+      "cmp": "CMP-88102",
+      "specialty": "Radiología torácica",
+      "display_name": "Dra. Patricia Ramos",
+      "email_hint": "p.ramos@hospital.com"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "aa000001-1111-4000-8000-000000000001",
+      "patient_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "specialist_id": "f601a002-0001-4000-8000-000000000001",
+      "scheduled_at": "2024-11-10T09:00:00",
+      "status": "atendido",
+      "notes": "Consulta de control"
+    },
+    {
+      "id": "aa000002-2222-4000-8000-000000000002",
+      "patient_id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "specialist_id": "f601a002-0001-4000-8000-000000000001",
+      "scheduled_at": "2024-11-11T14:30:00",
+      "status": "pendiente",
+      "notes": "Seguimiento radiológico"
+    },
+    {
+      "id": "aa000003-3333-4000-8000-000000000003",
+      "patient_id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "specialist_id": "f601a002-0002-4000-8000-000000000002",
+      "scheduled_at": "2024-11-12T11:00:00",
+      "status": "en_proceso",
+      "notes": "Valoración inicial"
+    },
+    {
+      "id": "aa000004-4444-4000-8000-000000000004",
+      "patient_id": "d4e5f6a7-b8c9-0123-def0-456789012345",
+      "specialist_id": "f601a002-0001-4000-8000-000000000001",
+      "scheduled_at": "2024-11-13T08:45:00",
+      "status": "pendiente",
+      "notes": "Chequeo preoperatorio"
+    }
+  ],
+  "studies": [
+    {
+      "id": "bb000101-aaaa-4000-8000-000000000101",
+      "patient_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "appointment_id": "aa000001-1111-4000-8000-000000000001",
+      "image_url": "https://example.com/demo/cxr-101.png",
+      "study_type": "radiografia",
+      "description": "Rayos X - Pecho"
+    },
+    {
+      "id": "bb000102-bbbb-4000-8000-000000000102",
+      "patient_id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "appointment_id": "aa000002-2222-4000-8000-000000000002",
+      "image_url": "https://example.com/demo/cxr-102.png",
+      "study_type": "radiografia",
+      "description": "Rayos X - Pecho PA y lateral"
+    },
+    {
+      "id": "bb000103-cccc-4000-8000-000000000103",
+      "patient_id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "appointment_id": "aa000003-3333-4000-8000-000000000003",
+      "image_url": "https://example.com/demo/ct-103.png",
+      "study_type": "tomografia",
+      "description": "TC tórax sin contraste"
+    },
+    {
+      "id": "bb000104-dddd-4000-8000-000000000104",
+      "patient_id": "d4e5f6a7-b8c9-0123-def0-456789012345",
+      "appointment_id": "aa000004-4444-4000-8000-000000000004",
+      "image_url": "https://example.com/demo/cxr-104.png",
+      "study_type": "radiografia",
+      "description": "Rayos X - Pecho"
+    },
+    {
+      "id": "bb000105-eeee-4000-8000-000000000105",
+      "patient_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "appointment_id": "aa000001-1111-4000-8000-000000000001",
+      "image_url": "https://example.com/demo/cxr-105.png",
+      "study_type": "radiografia",
+      "description": "Rayos X - Pecho control"
+    }
+  ],
+  "predictions": [
+    {
+      "id": "cc000201-1111-4000-8000-000000000201",
+      "study_id": "bb000101-aaaa-4000-8000-000000000101",
+      "model_version": "thorax-v2.0.1",
+      "probability": 0.78,
+      "result": "positivo",
+      "finding_label": "Neumonía",
+      "reviewed": true
+    },
+    {
+      "id": "cc000202-2222-4000-8000-000000000202",
+      "study_id": "bb000102-bbbb-4000-8000-000000000102",
+      "model_version": "thorax-v2.0.1",
+      "probability": 0.81,
+      "result": "positivo",
+      "finding_label": "EPOC avanzado",
+      "reviewed": false
+    },
+    {
+      "id": "cc000203-3333-4000-8000-000000000203",
+      "study_id": "bb000103-cccc-4000-8000-000000000103",
+      "model_version": "thorax-v2.0.1",
+      "probability": 0.92,
+      "result": "positivo",
+      "finding_label": "Nódulo sospechoso",
+      "reviewed": true
+    },
+    {
+      "id": "cc000204-4444-4000-8000-000000000204",
+      "study_id": "bb000104-dddd-4000-8000-000000000104",
+      "model_version": "thorax-v2.0.1",
+      "probability": 0.34,
+      "result": "negativo",
+      "finding_label": "Sin hallazgos agudos",
+      "reviewed": false
+    },
+    {
+      "id": "cc000205-5555-4000-8000-000000000205",
+      "study_id": "bb000105-eeee-4000-8000-000000000105",
+      "model_version": "thorax-v2.0.1",
+      "probability": 0.72,
+      "result": "positivo",
+      "finding_label": "Derrame pleural leve",
+      "reviewed": true
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "dd000301-aaaa-4000-8000-000000000301",
+      "appointment_id": "aa000001-1111-4000-8000-000000000001",
+      "specialist_id": "f601a002-0001-4000-8000-000000000001",
+      "prediction_id": "cc000201-1111-4000-8000-000000000201",
+      "severity": "moderado"
+    },
+    {
+      "id": "dd000302-bbbb-4000-8000-000000000302",
+      "appointment_id": "aa000003-3333-4000-8000-000000000003",
+      "specialist_id": "f601a002-0002-4000-8000-000000000002",
+      "prediction_id": "cc000203-3333-4000-8000-000000000203",
+      "severity": "grave"
+    }
+  ]
+}
