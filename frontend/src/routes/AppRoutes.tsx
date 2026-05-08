@@ -59,6 +59,7 @@ export function AppRoutes() {
             />
             <Route path="/studies" element={<StudiesPage />} />
             <Route path="/predict" element={<Navigate to="/predictions" replace />} />
+            <Route path="/scan" element={<ScanPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

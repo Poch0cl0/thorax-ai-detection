@@ -62,3 +62,27 @@ export type TokenResponse = {
   access_token: string
   token_type: string
 }
+
+export type ScanResult = {
+  prediction: string
+  probability_cancer: number
+  probability_normal: number
+  risk_level: string
+  model_used: string
+  model_display_name: string
+  model_version: string
+  confidence_percent: number
+  recommendation: string
+  disclaimer: string
+}
+
+export type ModelOption = {
+  value: string
+  label: string
+  description: string
+}
+
+export type ModelsInfo = {
+  available_models: string[]
+  model_options: ModelOption[]
+}

@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     MODEL_VERSION: str = "stub-0.1.0"
     INFERENCE_TIMEOUT_SECONDS: float = 120.0
 
+    # Directorios de modelos PySpark ML
+    MODELS_DIR: str = "models"
+    LR_MODEL_PATH: str = "models/modelo_lr_empaquetado"
+    RF_MODEL_PATH: str = "models/modelo_rf_empaquetado"
+
+    # Preprocesamiento de imagen
+    IMAGE_SIZE: int = 64
+    MAX_IMAGE_SIZE_MB: int = 10
+
     ENVIRONMENT: Literal["development", "staging", "production"] = "development"
 
 

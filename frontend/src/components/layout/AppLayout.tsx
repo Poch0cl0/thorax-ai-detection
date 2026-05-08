@@ -99,6 +99,7 @@ export function AppLayout() {
               <Icon className="h-4 w-4 shrink-0 text-thorax-accent" strokeWidth={1.75} />
               {label}
             </NavLink>
+          <NavLink to="/scan">Análisis IA</NavLink>
           ))}
         </nav>
 

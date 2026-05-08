@@ -6,7 +6,7 @@ from app.api.v1.endpoints import (
     health,
     patients,
     predictions,
-    studies,
+    scan, studies,
     users,
 )
 
@@ -18,3 +18,4 @@ api_router.include_router(patients.router)
 api_router.include_router(studies.router)
 api_router.include_router(appointments.router)
 api_router.include_router(predictions.router)
+api_router.include_router(scan.router)
