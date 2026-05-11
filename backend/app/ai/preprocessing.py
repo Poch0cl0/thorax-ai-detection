@@ -1,12 +1,10 @@
-from __future__ import annotations
-
-import io
 """
 Preprocesamiento de imágenes de radiografía de tórax.
 
 Pipeline: imagen → escala de grises → resize 64×64 → normalizar [0,1] → flatten → 4096 features
 Compatible con el entrenamiento realizado en Google Colab con PySpark ML.
 """
+from __future__ import annotations
 
 import io
 import logging
@@ -131,7 +129,8 @@ def preprocess_input(
     Normaliza metadatos del estudio y, si aplica, extrae información básica
     desde píxeles (RX/PNG/JPEG típicos demo).
     """
-    result = {
+    from typing import Any
+
     out: dict[str, Any] = {
         "modality": study_metadata.get("modality", "CT"),
         "study_instance_uid": study_metadata.get("study_instance_uid"),
@@ -155,13 +154,12 @@ def preprocess_input(
         out["pil_unavailable"] = True
     except Exception as exc:
         out["pil_error"] = str(exc)
-    return out
 
     if raw_bytes:
         try:
             features = preprocess_image(raw_bytes)
-            result["features"] = features.tolist()
+            out["features"] = features.tolist()
         except ValueError:
             logger.warning("No se pudo preprocesar la imagen del estudio")
 
-    return result
+    return out
