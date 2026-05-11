@@ -99,8 +99,21 @@ export function AppLayout() {
               <Icon className="h-4 w-4 shrink-0 text-thorax-accent" strokeWidth={1.75} />
               {label}
             </NavLink>
-          <NavLink to="/scan">Análisis IA</NavLink>
           ))}
+          <NavLink
+            to="/scan"
+            className={({ isActive }) =>
+              [
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-thorax-accent/15 text-white ring-1 ring-thorax-accent/30'
+                  : 'text-thorax-muted hover:bg-thorax-card hover:text-thorax-text',
+              ].join(' ')
+            }
+          >
+            <Activity className="h-4 w-4 shrink-0 text-thorax-accent" strokeWidth={1.75} />
+            Análisis IA
+          </NavLink>
         </nav>
 
         <div className="border-t border-thorax-border/80 p-4">
