@@ -115,11 +115,23 @@ export async function createStudyWithImage(body: {
   })
 }
 
-export async function runPrediction(studyId: number): Promise<Prediction> {
+export async function runPrediction(studyId: number, modelType?: string): Promise<Prediction> {
   return apiFetch<Prediction>('/api/v1/predictions', {
     method: 'POST',
-    body: JSON.stringify({ study_id: studyId }),
+    body: JSON.stringify({ study_id: studyId, model_type: modelType ?? null }),
   })
+}
+
+export async function getPrediction(predictionId: number): Promise<Prediction> {
+  return apiFetch<Prediction>(`/api/v1/predictions/${predictionId}`)
+}
+
+export async function clearAllPredictions(): Promise<void> {
+  return apiFetch<void>('/api/v1/predictions', { method: 'DELETE' })
+}
+
+export async function deletePrediction(predictionId: number): Promise<void> {
+  return apiFetch<void>(`/api/v1/predictions/${predictionId}`, { method: 'DELETE' })
 }
 
 export async function listPredictionsForStudy(

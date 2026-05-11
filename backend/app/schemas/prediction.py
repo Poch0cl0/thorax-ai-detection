@@ -11,6 +11,10 @@ class PredictionCreate(BaseModel):
     finding_hint: str | None = Field(
         None, description="Opcional; no sustituye la inferencia del modelo"
     )
+    model_type: str | None = Field(
+        None, description="Modelo a usar: 'logistic_regression' o 'random_forest'. "
+        "Si no se especifica, se usa el primer modelo disponible."
+    )
 
 
 class PredictionRead(BaseModel):

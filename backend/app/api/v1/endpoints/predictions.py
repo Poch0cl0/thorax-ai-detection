@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_roles
-from app.models import User
+from app.models import Prediction, User
 from app.schemas.prediction import PredictionCreate, PredictionRead
 from app.services.prediction_service import PredictionService
 
@@ -30,6 +30,30 @@ async def create_prediction(
         raise HTTPException(status_code=404, detail=str(e)) from e
     except TimeoutError as e:
         raise HTTPException(status_code=504, detail=str(e)) from e
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+def clear_all_predictions(
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_roles("clinician", "admin"))],
+) -> None:
+    """Elimina todas las predicciones. Solo médicos y administradores."""
+    db.query(Prediction).delete()
+    db.commit()
+
+
+@router.delete("/{prediction_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_prediction(
+    prediction_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_roles("clinician", "admin"))],
+) -> None:
+    """Elimina una predicción por ID."""
+    p = db.query(Prediction).filter(Prediction.id == prediction_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Predicción no encontrada")
+    db.delete(p)
+    db.commit()
 
 
 @router.get("/study/{study_id}", response_model=list[PredictionRead])

@@ -52,7 +52,7 @@ class PredictionService:
 
         try:
             raw = await asyncio.wait_for(
-                asyncio.to_thread(run_inference, meta, pixel_bytes),
+                asyncio.to_thread(run_inference, meta, pixel_bytes, data.model_type),
                 timeout=timeout,
             )
         except asyncio.TimeoutError as exc:
@@ -61,21 +61,42 @@ class PredictionService:
                 f"Inferencia superó el tiempo máximo ({timeout}s)"
             ) from exc
 
-        pred_details = raw.get("details")
-        mv = settings.MODEL_VERSION
-        if isinstance(pred_details, dict) and "model_version" in pred_details:
-            mv = str(pred_details["model_version"])
+        # Normalizar output del modelo real vs. modo stub
+        # El modelo real devuelve: prediction, probability_cancer, probability_normal, risk_level, ...
+        # El modo stub devuelve:   risk_score, finding_label, details.mode="stub"
+        if "probability_cancer" in raw:
+            # Inferencia real con scikit-learn
+            risk_score = float(raw["probability_cancer"])
+            finding_label = str(raw.get("prediction", "unknown"))
+            mv = str(raw.get("model_version", settings.MODEL_VERSION))
+            pred_details: dict[str, Any] = {
+                "mode": "real",
+                "model_used": raw.get("model_used"),
+                "model_version": mv,
+                "risk_level": raw.get("risk_level"),
+                "confidence_percent": raw.get("confidence_percent"),
+                "probability_normal": raw.get("probability_normal"),
+                "recommendation": raw.get("recommendation"),
+            }
+        else:
+            # Modo stub
+            risk_score = raw.get("risk_score")
+            finding_label = str(raw.get("finding_label", "unknown"))
+            stub_details = raw.get("details")
+            mv = settings.MODEL_VERSION
+            if isinstance(stub_details, dict) and "model_version" in stub_details:
+                mv = str(stub_details["model_version"])
+            pred_details = stub_details if isinstance(stub_details, dict) else {}
+            pred_details.setdefault("model_version", mv)
 
         prediction = Prediction(
             study_id=study.id,
             created_by_id=user_id,
             model_version=mv,
-            risk_score=raw.get("risk_score"),
-            finding_label=str(raw.get("finding_label", "unknown")),
-            details=pred_details if isinstance(pred_details, dict) else raw.get("details"),
+            risk_score=risk_score,
+            finding_label=finding_label,
+            details=pred_details,
         )
-        if isinstance(prediction.details, dict):
-            prediction.details.setdefault("model_version", settings.MODEL_VERSION)
 
         db.add(prediction)
         AuditService.add_entry(

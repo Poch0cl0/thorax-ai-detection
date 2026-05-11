@@ -142,22 +142,30 @@ def run_scan_inference(
 def run_inference(
     study_metadata: dict[str, Any],
     raw_bytes: bytes | None = None,
+    model_type: str | None = None,
 ) -> dict[str, Any]:
     """
     Ejecuta inferencia compatible con el flujo existente de estudios.
 
     Si hay imagen (raw_bytes) y los modelos están disponibles, usa
     inferencia real con scikit-learn. Si no, recurre a la inferencia simulada.
+
+    Args:
+        study_metadata: Metadatos del estudio.
+        raw_bytes: Bytes de la imagen de radiografía.
+        model_type: Modelo a usar ('logistic_regression' o 'random_forest').
+            Si no se especifica o no está disponible, se usa el primero disponible.
     """
     available = get_available_models()
 
     if raw_bytes and available:
+        chosen = model_type if model_type in available else available[0]
         try:
-            model_type = available[0]
-            return run_scan_inference(raw_bytes, model_type)
+            return run_scan_inference(raw_bytes, chosen)
         except Exception:
             logger.warning(
-                "Inferencia real falló, recurriendo a modo simulado"
+                "Inferencia real falló con modelo '%s', recurriendo a modo simulado",
+                chosen,
             )
 
     # Inferencia simulada (modo stub)

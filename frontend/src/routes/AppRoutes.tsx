@@ -29,7 +29,7 @@ export function AppRoutes() {
             <Route
               path="/patients"
               element={
-                <RoleGate allow={['especialista', 'admin']}>
+                <RoleGate allow={['especialista', 'secretaria', 'admin']}>
                   <PatientsPage />
                 </RoleGate>
               }
@@ -60,7 +60,14 @@ export function AppRoutes() {
             />
             <Route path="/studies" element={<StudiesPage />} />
             <Route path="/predict" element={<Navigate to="/predictions" replace />} />
-            <Route path="/scan" element={<ScanPage />} />
+            <Route
+              path="/scan"
+              element={
+                <RoleGate allow={['admin']}>
+                  <ScanPage />
+                </RoleGate>
+              }
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

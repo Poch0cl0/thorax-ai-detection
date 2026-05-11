@@ -33,6 +33,7 @@ export function AttendQueuePage() {
   const [modality, setModality] = useState('radiografia')
   const [studyNote, setStudyNote] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [modelType, setModelType] = useState<'random_forest' | 'logistic_regression'>('random_forest')
 
   const patientById = useMemo(() => {
     const m = new Map<string, string>()
@@ -125,7 +126,7 @@ export function AttendQueuePage() {
         description: studyNote.trim() || null,
         file,
       })
-      await runPredictionApi(study.id)
+      await runPredictionApi(study.id, modelType)
       await refreshApi()
       setUploadFor(null)
       setFile(null)
@@ -384,6 +385,37 @@ export function AttendQueuePage() {
                   className="mt-1 w-full rounded-xl border border-thorax-border bg-thorax-bg-deep px-3 py-2 text-sm normal-case text-thorax-text"
                 />
               </label>
+
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-thorax-muted">
+                  Modelo de IA
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { value: 'random_forest', label: 'Random Forest', desc: 'Alta precisión (50 árboles)' },
+                      { value: 'logistic_regression', label: 'Reg. Logística', desc: 'Rápido e interpretable' },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => setModelType(opt.value)}
+                      className={[
+                        'flex flex-col items-start rounded-xl border px-3 py-2.5 text-left text-xs transition-colors disabled:opacity-50',
+                        modelType === opt.value
+                          ? 'border-thorax-accent bg-thorax-accent/10 text-thorax-accent'
+                          : 'border-thorax-border bg-thorax-bg-deep text-thorax-muted hover:border-thorax-accent/50',
+                      ].join(' ')}
+                    >
+                      <span className="font-semibold normal-case">{opt.label}</span>
+                      <span className="mt-0.5 normal-case opacity-80">{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"

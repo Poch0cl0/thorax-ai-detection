@@ -13,6 +13,7 @@ numpy>=2.1.0
 psycopg2-binary>=2.9.10
 scikit-learn>=1.5.0
 joblib>=1.4.0
+pyarrow>=17.0.0
 
 pytest>=8.3.0
 httpx>=0.28.0

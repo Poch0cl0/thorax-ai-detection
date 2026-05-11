@@ -141,8 +141,8 @@ export function useClinicalViewModel() {
   )
 
   const runPredictionApi = useCallback(
-    async (studyId: number) => {
-      await clinicalService.runPrediction(studyId)
+    async (studyId: number, modelType?: string) => {
+      await clinicalService.runPrediction(studyId, modelType)
       await refreshApi()
     },
     [refreshApi],

@@ -4,6 +4,12 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Directorio raíz del repositorio (cuatro niveles arriba de este archivo:
+#   backend/app/core/config.py → backend/app/core/ → backend/app/ → backend/ → repo/)
+_REPO_DIR = Path(__file__).resolve().parent.parent.parent.parent
+_DEFAULT_LR_PATH = str(_REPO_DIR / "models" / "modelo_lr.joblib")
+_DEFAULT_RF_PATH = str(_REPO_DIR / "models" / "modelo_rf.joblib")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -30,8 +36,10 @@ class Settings(BaseSettings):
     INFERENCE_TIMEOUT_SECONDS: float = 30.0
 
     # Rutas a modelos scikit-learn exportados como .joblib
-    LR_MODEL_PATH: str = "models/modelo_lr.joblib"
-    RF_MODEL_PATH: str = "models/modelo_rf.joblib"
+    # El default usa ruta absoluta calculada desde __file__ para dev local.
+    # En Docker se sobreescribe vía variables de entorno del compose.
+    LR_MODEL_PATH: str = _DEFAULT_LR_PATH
+    RF_MODEL_PATH: str = _DEFAULT_RF_PATH
 
     # Preprocesamiento de imagen
     IMAGE_SIZE: int = 64
