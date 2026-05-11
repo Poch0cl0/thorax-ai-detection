@@ -10,6 +10,7 @@ import { PredictionsPage } from '../pages/PredictionsPage'
 import { StudiesPage } from '../pages/StudiesPage'
 import { AppointmentsPage } from '../pages/AppointmentsPage'
 import { AttendQueuePage } from '../pages/AttendQueuePage'
+import { ScanPage } from '../pages/ScanPage'
 
 export function AppRoutes() {
   return (
