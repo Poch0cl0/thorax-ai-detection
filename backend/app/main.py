@@ -15,31 +15,12 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Ciclo de vida de la aplicación:
-    - Startup: pre-carga los modelos PySpark ML.
-    - Shutdown: cierra la SparkSession de forma ordenada.
+    Ciclo de vida de la aplicación.
+    Los modelos ML se cargan de forma lazy al primer uso desde scan o predictions.
     """
-    # --- Startup ---
-    logger.info("Iniciando Thorax AI — cargando modelos…")
-    try:
-        from app.ai.model_loader import load_all_models
-        load_all_models()
-        logger.info("Modelos cargados exitosamente")
-    except Exception:
-        logger.exception(
-            "Error al cargar modelos ML — la inferencia simulada "
-            "seguirá disponible"
-        )
-
+    logger.info("Iniciando Thorax AI Detection — sistema transaccional listo")
     yield
-
-    # --- Shutdown ---
     logger.info("Apagando Thorax AI…")
-    try:
-        from app.ai.model_loader import shutdown_spark
-        shutdown_spark()
-    except Exception:
-        logger.exception("Error durante shutdown de Spark")
 
 
 app = FastAPI(

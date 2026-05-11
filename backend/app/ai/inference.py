@@ -1,15 +1,16 @@
 """
 Motor de inferencia para detección de cáncer de tórax.
 
-Utiliza los modelos PySpark ML (Logistic Regression y Random Forest)
+Utiliza modelos scikit-learn (Logistic Regression y Random Forest)
 para clasificar imágenes de radiografía como "cancer" o "normal".
+Si no hay modelos disponibles, recurre a inferencia simulada (stub).
 """
 
 import logging
 import random
 from typing import Any
 
-from app.ai.model_loader import get_model, get_spark
+from app.ai.model_loader import get_available_models, get_model
 from app.ai.preprocessing import preprocess_image, preprocess_input
 from app.core.config import settings
 
@@ -64,7 +65,7 @@ def _generate_recommendation(prediction_label: str, risk_level: str) -> str:
 
 
 _DISCLAIMER = (
-    "⚠️ AVISO: Este sistema es una herramienta de apoyo académico y NO "
+    "AVISO: Este sistema es una herramienta de apoyo académico y NO "
     "sustituye el diagnóstico médico profesional. Los resultados deben ser "
     "interpretados exclusivamente por personal de salud calificado. "
     "No tome decisiones médicas basándose únicamente en esta predicción."
@@ -90,49 +91,35 @@ def run_scan_inference(
         ValueError: si el modelo o la imagen no son válidos.
         RuntimeError: si ocurre un error durante la inferencia.
     """
-    # 1. Preprocesar imagen → vector de 4096 features
+    # 1. Preprocesar imagen → vector de 4096 features (64×64 píxeles aplanados)
     features_array = preprocess_image(image_bytes)
 
-    # 2. Obtener modelo y Spark session
+    # 2. Obtener modelo scikit-learn
     model = get_model(model_type)
-    spark = get_spark()
 
     try:
-        from pyspark.ml.linalg import Vectors
-
-        # 3. Crear DataFrame de Spark con una fila
-        dense_vector = Vectors.dense(features_array.tolist())
-        df = spark.createDataFrame([(dense_vector,)], ["features"])
-
-        # 4. Ejecutar transformación del modelo
-        result_df = model.transform(df)
-
-        # 5. Extraer resultados
-        row = result_df.select(
-            "prediction", "probability"
-        ).first()
-
-        prediction_value = float(row["prediction"])  # 0.0 o 1.0
-        probability_vector = row["probability"]      # DenseVector[prob_0, prob_1]
-
-        prob_normal = float(probability_vector[0])
-        prob_cancer = float(probability_vector[1])
+        # 3. Ejecutar predicción con scikit-learn (una sola fila)
+        X = features_array.reshape(1, -1)
+        prediction_value = float(model.predict(X)[0])        # 0.0 o 1.0
+        proba = model.predict_proba(X)[0]                    # [prob_normal, prob_cancer]
+        prob_normal = float(proba[0])
+        prob_cancer = float(proba[1])
 
     except Exception as exc:
-        logger.exception("Error durante la inferencia PySpark")
+        logger.exception("Error durante la inferencia scikit-learn")
         raise RuntimeError(
             "Error al ejecutar la predicción del modelo. "
             "Intente nuevamente o use otro modelo."
         ) from exc
 
-    # 6. Determinar etiqueta y nivel de riesgo
+    # 4. Determinar etiqueta y nivel de riesgo
     prediction_label = (
         "cancer_detected" if prediction_value == 1.0 else "no_cancer"
     )
     risk_level = _classify_risk(prob_cancer)
     confidence = max(prob_cancer, prob_normal) * 100
 
-    # 7. Construir respuesta
+    # 5. Construir respuesta
     model_display_names = {
         "logistic_regression": "Regresión Logística",
         "random_forest": "Random Forest",
@@ -157,26 +144,23 @@ def run_inference(
     raw_bytes: bytes | None = None,
 ) -> dict[str, Any]:
     """
-    Ejecuta inferencia — compatible con el flujo existente de estudios.
+    Ejecuta inferencia compatible con el flujo existente de estudios.
 
     Si hay imagen (raw_bytes) y los modelos están disponibles, usa
-    inferencia real. Si no, recurre a la inferencia simulada.
+    inferencia real con scikit-learn. Si no, recurre a la inferencia simulada.
     """
-    from app.ai.model_loader import get_available_models
-
     available = get_available_models()
 
-    # Si hay imagen y modelos disponibles, usar inferencia real
     if raw_bytes and available:
         try:
-            model_type = available[0]  # Usar el primer modelo disponible
+            model_type = available[0]
             return run_scan_inference(raw_bytes, model_type)
         except Exception:
             logger.warning(
                 "Inferencia real falló, recurriendo a modo simulado"
             )
 
-    # Inferencia simulada (compatibilidad)
+    # Inferencia simulada (modo stub)
     features = preprocess_input(study_metadata, raw_bytes)
     uid = str(
         features.get("study_instance_uid")

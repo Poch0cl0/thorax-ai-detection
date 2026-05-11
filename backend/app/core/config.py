@@ -26,13 +26,12 @@ class Settings(BaseSettings):
     UPLOAD_ROOT: str = str(Path("uploads"))
 
     MODEL_PATH: str | None = None
-    MODEL_VERSION: str = "stub-0.1.0"
-    INFERENCE_TIMEOUT_SECONDS: float = 120.0
+    MODEL_VERSION: str = "sklearn-1.0.0"
+    INFERENCE_TIMEOUT_SECONDS: float = 30.0
 
-    # Directorios de modelos PySpark ML
-    MODELS_DIR: str = "models"
-    LR_MODEL_PATH: str = "models/modelo_lr_empaquetado"
-    RF_MODEL_PATH: str = "models/modelo_rf_empaquetado"
+    # Rutas a modelos scikit-learn exportados como .joblib
+    LR_MODEL_PATH: str = "models/modelo_lr.joblib"
+    RF_MODEL_PATH: str = "models/modelo_rf.joblib"
 
     # Preprocesamiento de imagen
     IMAGE_SIZE: int = 64
