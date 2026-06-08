@@ -534,3 +534,197 @@ async def diagnose_and_save(
         ),
         "models_used": list(result_map.keys()),
     }
+
+
+# ═══════════════════════════════════════════════════════
+# DYNAMO DB — DIAGNÓSTICOS
+# ═══════════════════════════════════════════════════════
+
+@router.post(
+    "/diagnose-dual",
+    status_code=status.HTTP_201_CREATED,
+    summary="Analizar imagen → guardar en RDS + DynamoDB",
+    description=(
+        "Corre ambos modelos de IA sobre la radiografía, guarda el resultado "
+        "en la tabla `diagnoses` de PostgreSQL (RDS) **y** replica el documento "
+        "en DynamoDB (`thorax_diagnoses`). "
+        "Retorna el diagnóstico completo con confirmación de ambas escrituras."
+    ),
+)
+async def diagnose_dual(
+    patient_id: int = Form(..., description="ID del paciente en la tabla patients"),
+    image_url: str | None = Form(default=None, description="URL pública de la imagen (opcional)"),
+    file: UploadFile = File(..., description="Radiografía de tórax (JPEG, PNG, BMP, TIFF, WebP)"),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Análisis completo con escritura dual RDS + DynamoDB."""
+    from app.services.dynamo_service import save_diagnosis
+
+    # ── 1. Verificar paciente ────────────────────────────────────────────────
+    patient = db.execute(
+        text("SELECT id FROM patients WHERE id = :id"), {"id": patient_id}
+    ).fetchone()
+    if not patient:
+        raise HTTPException(status_code=404, detail=f"Paciente id={patient_id} no encontrado.")
+
+    # ── 2. Verificar modelos ─────────────────────────────────────────────────
+    available = get_available_models()
+    if not available:
+        raise HTTPException(status_code=503, detail="No hay modelos de IA cargados.")
+
+    # ── 3. Validar imagen ────────────────────────────────────────────────────
+    try:
+        raw_bytes = await file.read()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Error al leer el archivo.") from exc
+
+    try:
+        validate_image_bytes(raw_bytes, file.content_type)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    # ── 4. Inferencia ambos modelos ──────────────────────────────────────────
+    timeout = settings.INFERENCE_TIMEOUT_SECONDS
+    lr_prob: float | None = None
+    rf_prob: float | None = None
+
+    async def _run(model_type: str) -> dict:
+        return await asyncio.wait_for(
+            asyncio.to_thread(run_scan_inference, raw_bytes, model_type),
+            timeout=timeout,
+        )
+
+    tasks: dict[str, asyncio.Task] = {}
+    if "logistic_regression" in available:
+        tasks["lr"] = asyncio.create_task(_run("logistic_regression"))
+    if "random_forest" in available:
+        tasks["rf"] = asyncio.create_task(_run("random_forest"))
+
+    raw_results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+    result_map: dict[str, dict] = {}
+    for key, res in zip(tasks.keys(), raw_results):
+        if not isinstance(res, Exception):
+            result_map[key] = res
+
+    if not result_map:
+        raise HTTPException(status_code=500, detail="Todos los modelos fallaron.")
+
+    if "lr" in result_map:
+        lr_prob = result_map["lr"]["probability_cancer"]
+    if "rf" in result_map:
+        rf_prob = result_map["rf"]["probability_cancer"]
+
+    primary = result_map.get("rf") or result_map.get("lr")
+    prediction_label = primary["prediction"]
+    risk_level = primary["risk_level"]
+    confidence_percent = primary["confidence_percent"]
+    recommendation = primary["recommendation"]
+
+    # ── 5. Guardar en RDS (PostgreSQL) ───────────────────────────────────────
+    row = db.execute(
+        text(
+            """
+            INSERT INTO diagnoses (patient_id, image_url, prediction_label, lr_probability, rf_probability)
+            VALUES (:patient_id, :image_url, :prediction_label, :lr_probability, :rf_probability)
+            RETURNING *
+            """
+        ),
+        {
+            "patient_id": patient_id,
+            "image_url": image_url,
+            "prediction_label": prediction_label,
+            "lr_probability": lr_prob,
+            "rf_probability": rf_prob,
+        },
+    ).fetchone()
+    db.commit()
+    saved = _row_to_dict(row)
+
+    enriched = {
+        **saved,
+        "risk_level": risk_level,
+        "confidence_percent": confidence_percent,
+        "recommendation": recommendation,
+    }
+
+    # ── 6. Guardar en DynamoDB ───────────────────────────────────────────────
+    dynamo_ok = False
+    dynamo_error: str | None = None
+    dynamo_indexed_at: str | None = None
+
+    try:
+        result_with_dynamo = save_diagnosis(enriched)
+        dynamo_indexed_at = result_with_dynamo.get("dynamo_indexed_at")
+        dynamo_ok = True
+    except (ValueError, RuntimeError) as exc:
+        dynamo_error = str(exc)
+        logger.warning("DynamoDB write failed: %s", exc)
+
+    return {
+        **enriched,
+        "disclaimer": (
+            "AVISO: Este sistema es una herramienta de apoyo académico y NO "
+            "sustituye el diagnóstico médico profesional."
+        ),
+        "models_used": list(result_map.keys()),
+        "storage": {
+            "rds": {"ok": True, "table": "diagnoses"},
+            "dynamodb": {
+                "ok": dynamo_ok,
+                "table": settings.DYNAMO_TABLE_NAME,
+                "indexed_at": dynamo_indexed_at,
+                "error": dynamo_error,
+            },
+        },
+    }
+
+
+@router.get(
+    "/dynamo/diagnoses/{diagnosis_id}",
+    summary="Leer diagnóstico desde DynamoDB",
+    description="Obtiene un diagnóstico directamente de DynamoDB por su ID.",
+)
+def get_diagnosis_dynamo(diagnosis_id: int) -> dict:
+    from app.services.dynamo_service import get_diagnosis_from_dynamo
+    try:
+        item = get_diagnosis_from_dynamo(diagnosis_id)
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Diagnóstico id={diagnosis_id} no encontrado en DynamoDB.")
+    return item
+
+
+@router.get(
+    "/dynamo/diagnoses/patient/{patient_id}",
+    summary="Listar diagnósticos de un paciente desde DynamoDB",
+    description="Escanea DynamoDB y retorna todos los diagnósticos del paciente.",
+)
+def list_diagnoses_patient_dynamo(patient_id: int) -> list[dict]:
+    from app.services.dynamo_service import list_diagnoses_by_patient_dynamo
+    try:
+        return list_diagnoses_by_patient_dynamo(patient_id)
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+
+@router.post(
+    "/dynamo/ensure-table",
+    summary="Crear tabla DynamoDB si no existe",
+    description=(
+        "Verifica si la tabla `thorax_diagnoses` existe en DynamoDB. "
+        "Si no existe, la crea automáticamente con billing PAY_PER_REQUEST."
+    ),
+)
+def ensure_dynamo_table() -> dict:
+    from app.services.dynamo_service import ensure_table_exists
+    try:
+        already_existed = ensure_table_exists()
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    return {
+        "table": settings.DYNAMO_TABLE_NAME,
+        "region": settings.AWS_REGION,
+        "already_existed": already_existed,
+        "status": "ok",
+    }

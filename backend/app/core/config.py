@@ -47,6 +47,12 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: Literal["development", "staging", "production"] = "development"
 
+    # ── DynamoDB ──────────────────────────────────────────────────────────────
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_REGION: str = "us-west-1"
+    DYNAMO_TABLE_NAME: str = "thorax_diagnoses"
+
 
 @lru_cache
 def get_settings() -> Settings:
