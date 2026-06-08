@@ -5,15 +5,23 @@ Se usa SQL directo (text()) para respetar el esquema exacto de PostgreSQL.
 """
 from __future__ import annotations
 
+import asyncio
+import logging
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.ai.inference import run_scan_inference
+from app.ai.model_loader import get_available_models
+from app.ai.preprocessing import validate_image_bytes
+from app.core.config import settings
 from app.db.session import get_db
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/test", tags=["Test – tablas BD"])
 
@@ -362,3 +370,167 @@ def delete_diagnosis(diagnosis_id: int, db: Session = Depends(get_db)) -> None:
     db.commit()
     if result.rowcount == 0:
         _not_found("Diagnóstico", diagnosis_id)
+
+
+# ═══════════════════════════════════════════════════════
+# SCAN + GUARDAR EN DIAGNOSES
+# ═══════════════════════════════════════════════════════
+
+@router.post(
+    "/diagnose",
+    status_code=status.HTTP_201_CREATED,
+    summary="Analizar imagen y guardar diagnóstico",
+    description=(
+        "Sube una radiografía de tórax (JPEG, PNG, BMP, TIFF, WebP), "
+        "corre ambos modelos (Regresión Logística y Random Forest), "
+        "guarda el resultado en la tabla `diagnoses` y lo retorna."
+    ),
+    tags=["Test – tablas BD"],
+)
+async def diagnose_and_save(
+    patient_id: int = Form(..., description="ID del paciente en la tabla patients"),
+    image_url: str | None = Form(
+        default=None,
+        description="URL pública de la imagen (opcional, para referencia)",
+    ),
+    file: UploadFile = File(
+        ...,
+        description="Imagen de radiografía (JPEG, PNG, BMP, TIFF, WebP — máx 10 MB)",
+    ),
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    1. Valida la imagen.
+    2. Corre ambos modelos (LR + RF) en paralelo.
+    3. Guarda el resultado en la tabla `diagnoses`.
+    4. Retorna el diagnóstico completo.
+    """
+    # ── 1. Verificar que el paciente existe ─────────────────────────────────
+    patient = db.execute(
+        text("SELECT id FROM patients WHERE id = :id"), {"id": patient_id}
+    ).fetchone()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Paciente con id={patient_id} no encontrado.",
+        )
+
+    # ── 2. Verificar modelos disponibles ────────────────────────────────────
+    available = get_available_models()
+    if not available:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No hay modelos de IA cargados. Contacte al administrador.",
+        )
+
+    # ── 3. Leer y validar la imagen ─────────────────────────────────────────
+    try:
+        raw_bytes = await file.read()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error al leer el archivo.",
+        ) from exc
+
+    try:
+        validate_image_bytes(raw_bytes, file.content_type)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
+    # ── 4. Correr ambos modelos (LR + RF) ───────────────────────────────────
+    timeout = settings.INFERENCE_TIMEOUT_SECONDS
+    lr_prob: float | None = None
+    rf_prob: float | None = None
+    lr_label: str | None = None
+    rf_label: str | None = None
+
+    async def _run(model_type: str) -> dict:
+        return await asyncio.wait_for(
+            asyncio.to_thread(run_scan_inference, raw_bytes, model_type),
+            timeout=timeout,
+        )
+
+    # Ejecutar en paralelo si ambos modelos están disponibles
+    tasks: dict[str, asyncio.Task] = {}
+    if "logistic_regression" in available:
+        tasks["lr"] = asyncio.create_task(_run("logistic_regression"))
+    if "random_forest" in available:
+        tasks["rf"] = asyncio.create_task(_run("random_forest"))
+
+    if not tasks:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Ningún modelo compatible está disponible.",
+        )
+
+    try:
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail=f"La inferencia superó el tiempo máximo ({timeout}s).",
+        )
+
+    result_map: dict[str, dict] = {}
+    for key, res in zip(tasks.keys(), results):
+        if isinstance(res, Exception):
+            logger.warning("Modelo '%s' falló durante inferencia: %s", key, res)
+        else:
+            result_map[key] = res
+
+    if not result_map:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Todos los modelos fallaron durante la inferencia.",
+        )
+
+    if "lr" in result_map:
+        lr_prob = result_map["lr"]["probability_cancer"]
+        lr_label = result_map["lr"]["prediction"]
+    if "rf" in result_map:
+        rf_prob = result_map["rf"]["probability_cancer"]
+        rf_label = result_map["rf"]["prediction"]
+
+    # Etiqueta final: usa RF si está disponible, si no LR
+    primary = result_map.get("rf") or result_map.get("lr")
+    prediction_label = primary["prediction"]
+    risk_level = primary["risk_level"]
+    confidence_percent = primary["confidence_percent"]
+    recommendation = primary["recommendation"]
+
+    # ── 5. Guardar en tabla diagnoses ────────────────────────────────────────
+    row = db.execute(
+        text(
+            """
+            INSERT INTO diagnoses (patient_id, image_url, prediction_label, lr_probability, rf_probability)
+            VALUES (:patient_id, :image_url, :prediction_label, :lr_probability, :rf_probability)
+            RETURNING *
+            """
+        ),
+        {
+            "patient_id": patient_id,
+            "image_url": image_url,
+            "prediction_label": prediction_label,
+            "lr_probability": lr_prob,
+            "rf_probability": rf_prob,
+        },
+    ).fetchone()
+    db.commit()
+
+    saved = _row_to_dict(row)
+
+    # ── 6. Respuesta enriquecida ─────────────────────────────────────────────
+    return {
+        **saved,
+        "risk_level": risk_level,
+        "confidence_percent": confidence_percent,
+        "recommendation": recommendation,
+        "disclaimer": (
+            "AVISO: Este sistema es una herramienta de apoyo académico y NO "
+            "sustituye el diagnóstico médico profesional."
+        ),
+        "models_used": list(result_map.keys()),
+    }
